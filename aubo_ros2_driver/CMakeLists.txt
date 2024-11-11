@@ -69,6 +69,16 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   aubo_dashboard_msgs
 )
 
+if(UNIX)
+  # Hack to link in missing/can't find libraries on linux
+  execute_process(COMMAND bash "-c" "echo $(python3-config --ldflags --embed)" OUTPUT_VARIABLE BUILD_PYTHON_LINK_FLAGS)
+  separate_arguments(FORCE_LINK_FLAGS UNIX_COMMAND ${BUILD_PYTHON_LINK_FLAGS})
+  # list(APPEND FORCE_LINK_FLAGS
+  # -static-libstdc++
+  # )
+  add_link_options(${FORCE_LINK_FLAGS})
+endif()
+
 add_compile_options(-Wall)
 add_compile_options(-Wextra)
 add_compile_options(-Wno-unused-parameter)

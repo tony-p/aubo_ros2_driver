@@ -12,16 +12,28 @@ find_package(rclcpp REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(geometry_msgs REQUIRED)
+
+set(ROS_JOINTS_PLAN_DEPENDENCIES
+  moveit_ros_planning_interface
+  rclcpp
+)
+
+if(UNIX)
+  # Hack to link in missing/can't find libraries on linux
+  execute_process(COMMAND bash "-c" "echo $(python3-config --ldflags --embed)" OUTPUT_VARIABLE BUILD_PYTHON_LINK_FLAGS)
+  separate_arguments(FORCE_LINK_FLAGS UNIX_COMMAND ${BUILD_PYTHON_LINK_FLAGS})
+  # list(APPEND FORCE_LINK_FLAGS
+  # -static-libstdc++
+  # )
+  add_link_options(${FORCE_LINK_FLAGS})
+endif()
+
 add_executable(joints_plan src/joints_planning.cpp)
 target_include_directories(joints_plan PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
 target_compile_features(joints_plan PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
-ament_target_dependencies(
-  joints_plan
-  "moveit_ros_planning_interface"
-  "rclcpp"
-)
+ament_target_dependencies(joints_plan ${ROS_JOINTS_PLAN_DEPENDENCIES})
 
 install(TARGETS joints_plan
   DESTINATION lib/${PROJECT_NAME})
@@ -40,5 +52,6 @@ endif()
 
 install(DIRECTORY launch DESTINATION share/${PROJECT_NAME}
   PATTERN "setup_assistant.launch" EXCLUDE)
-  
+
+  ament_export_dependencies(${ROS_JOINTS_PLAN_DEPENDENCIES})
 ament_package()
